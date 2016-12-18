@@ -1,0 +1,52 @@
+/** 
+@defgroup soc_support SoC Support
+@{
+@brief This module covers SoC support files
+
+@details This section describes the files that are used for supporting various SoCs.
+
+The support files are:
+-# Linker files
+-# Start-up files
+-# SVD file
+-# Header files
+
+### Linker files ###
+
+Linker files are used to control the linkage part of the project compilation and contain details regarding the following
+-# memory areas definition (type  and ranges)
+-# data and code segments definition and their mapping to the memory areas.
+
+linker configuration files are provided for all supported linkers. Please see \ref Build_Tools for details.
+
+### Start-up files ###
+
+Start-up files are used to control the SoC bring-up part and contain:
+-# interrupt vector allocation
+-# start-up code and routines
+
+Start-up files are provided for all supported compilers. Please see \ref Build_Tools for details.
+
+### SVD file ###
+
+SVD file contains details about registers and can be used with an IDE to allow mapping of memory location to the register definition and information.
+
+### Header file ###
+
+For each SOC there are two header files provided in the SDK:
+-# <SoC_name>.h
+-# <SoC_name>_features.h
+
+The <SoC_name>.h file contains informations related to registers that is used by the SDK drivers and code.
+The <SoC_name>_features.h contains information related to the integration of modules in the SoC.
+
+@}
+
+@defgroup soc_header SoC Header file (SoC Header )
+@{
+@brief This module covers SoC Header file
+
+@details This section describes the functionality supported by the header file.
+For usage please see \ref soc_header_usage
+@}
+*/

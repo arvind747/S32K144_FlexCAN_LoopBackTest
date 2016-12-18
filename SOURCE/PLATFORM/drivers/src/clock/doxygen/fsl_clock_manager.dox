@@ -1,0 +1,22 @@
+/** 
+@defgroup clock_manager Clock Manager
+@brief This module covers the clock management API and clock related functionality.
+
+@details This section describes the programming interface of the clock_manager driver.
+Clock_manager achieves its functionality by relying on several HAL components corresponding to the hardware modules involved in clock distribution and management.
+
+# Notes
+Current implementation assumes that the clock configurations are valid and are applied in a valid sequence.
+Mainly this means that the configuration doesn't reinitialize the clock used as the system clock.
+# Code Example
+This is an example for switching between two configurations:
+~~~~~{.c}
+  CLOCK_SYS_Init(g_clockManConfigsArr,
+				 FSL_CLOCK_MANAGER_CONFIG_CNT,
+				 g_clockManCallbacksArr,
+				 FSL_CLOCK_MANAGER_CALLBACK_CNT);
+
+  CLOCK_SYS_UpdateConfiguration(0, CLOCK_MANAGER_POLICY_FORCIBLE);
+  CLOCK_SYS_UpdateConfiguration(1, CLOCK_MANAGER_POLICY_FORCIBLE);
+~~~~~
+*/

@@ -1,0 +1,7 @@
+/*!
+ * @defgroup pdb_hal PDB HAL
+ * @ingroup pdb
+ * @brief Programmable Delay Block Hardware Abstraction Layer.
+ * 
+ * This HAL provides low-level access to all hardware features of the PDB.
+ */

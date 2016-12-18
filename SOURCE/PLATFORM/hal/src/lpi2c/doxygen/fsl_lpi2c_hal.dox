@@ -1,0 +1,11 @@
+/** 
+@defgroup lpi2c_hal LPI2C HAL
+@ingroup lpi2c
+@brief Low Power Inter-Integrated Circuit (LPI2C) Hardware Abstraction Layer
+<p>
+  LPI2C HAL provides the API for reading and writing register bit-fields belonging to the LPI2C module. It also provides an initialization function for bringing the module to the reset state.
+</p>
+<p>
+  For higher-level functionality, use the LPI2C driver.
+</p>
+*/

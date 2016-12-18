@@ -1,0 +1,114 @@
+[InterruptLog]
+LogEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+SumEnabled=0
+ShowTimeSum=1
+SumSortOrder=0
+[DataLog]
+LogEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+SumEnabled=0
+ShowTimeSum=1
+[Stack]
+FillEnabled=0
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnLogOnly=1
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[Breakpoints2]
+Count=0
+[Interrupts]
+Enabled=1
+[MemConfig]
+Base=1
+Manual=0
+Ddf=1
+TypeViol=0
+Stop=1
+[Trace1]
+Enabled=0
+ShowSource=1
+[Simulator]
+Freq=10000000
+MultiCoreRunAll=1
+[PEMICRODriver]
+PEM_LeaveTargetRunning=0x00000000
+[PE_STARTUP]
+CPUTARGETTYPENAME=_ "ARM Processor - Autodetect"
+USE_CYCLONEPRO_RELAYS=_ "0"
+CyclonePro_poweroffonexit=_ "0"
+CyclonePro_currentvoltage=_ "128"
+CyclonePro_PowerDownDelay=_ "250"
+CyclonePro_PowerUpDelay=_ "250"
+Multilink_PowerDownDelay=_ "250"
+Multilink_PowerUpDelay=_ "1000"
+USE_SWD=_ "1"
+IO_DELAY_CNT=_ "0"
+FREQ_FX=_ "4"
+FREQ_NORMAL=_ "0"
+FREQ_OSJTAG=_ "0"
+FREQ_CYCLONE=_ "3"
+FREQ_TRACELINK=_ "3"
+FREQ_LIGHTNING=_ "1"
+FREQ_OPENSDA=_ "3"
+RESET_DELAY=_ "0"
+PORT=_ "181"
+PORT_NAME_STRING=_ "51B11E67"
+interface_selection=_ "7"
+TraceLink_MaxBufferSize=_ "1"
+SHOWDIALOG=_ "0"
+[PE_STORED_DEVICES]
+device0=_ "NXP_S32K1xx_S32K144F512M15"
+[PE_PEDEBUG]
+CURRENTDEVICE=_ "NXP_S32K1xx_S32K144F512M15"
+ERASE_PROGRAM_WITHOUT_ASKING=_ "1"
+CURRENTMODE=_ "4"
+[PE_DEVICE]
+CHIPMODE=_ "NXP_S32K1xx_S32K144F512M15"
+[DebugChecksum]
+Checksum=921186909
+[Exceptions]
+StopOnUncaught=_ 0
+StopOnThrow=_ 0
+[CallStack]
+ShowArgs=0
+[Disassembly]
+MixedMode=1
+[PE_SETTINGS]
+MEMORYSTART1=_ "0"
+MEMORYSTART2=_ "0"
+MEMORYSTART3=_ "0"
+DEFAULT_SOURCE_PATH=_ "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.5\arm\bin\pemicro\P&E"
+[PE_STARTUP12]
+show_hstep_assembly_details_new=_ "0"
+[PE_ARM]
+FILE1=_ ""
+BINTORAM=_ "1"
+BINTOFLASH=_ "0"
+BINTOFLASHDEFAULT=_ "0"
+GOTILMAINDEFAULTON=_ "1"
+KEEPCPROGOPEN=_ "0"
+[struct_types]
+Fmt0=flexcan_msgbuff_t-msgId	3	0
+Fmt1=mailBox_t-mb_msgId	4	0
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Disassemble mode]
+mode=0
+[Breakpoints]
+Bp0=_ "STD_CODE" "{E:\SVN_Instrument\AVAS_BUILD_Server\branch\CAN_TestApp\AVAS_S32K144_BUILD\SOURCE\SERVICES\CAN_IF\CAN_IF.c}.137.5" 0 0 0 0 "" 0 "" 0
+Count=1
+[Aliases]
+Count=0
+SuppressDialog=0

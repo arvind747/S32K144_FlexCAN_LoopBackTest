@@ -1,0 +1,77 @@
+####################################################################
+#     Processor:           S32K144_100
+#     Compiler:            COSMIC C Compiler
+#     Reference manual:    S32K144RM Rev. 1, Draft D, 10/2015
+#     Version:             rev. 1.9, 2016-02-23
+#     Build:               b160223
+#
+#     Abstract:
+#         Linker file for the COSMIC C Compiler
+#
+#     Copyright (c) 2016 Freescale Semiconductor, Inc.
+#     All rights reserved.
+#
+#     Redistribution and use in source and binary forms, with or without modification,
+#     are permitted provided that the following conditions are met:
+#
+#     o Redistributions of source code must retain the above copyright notice, this list
+#       of conditions and the following disclaimer.
+#
+#     o Redistributions in binary form must reproduce the above copyright notice, this
+#       list of conditions and the following disclaimer in the documentation and/or
+#       other materials provided with the distribution.
+#
+#     o Neither the name of Freescale Semiconductor, Inc. nor the names of its
+#       contributors may be used to endorse or promote products derived from this
+#       software without specific prior written permission.
+#
+#     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+#     ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+#     WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+#     DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+#     ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+#     (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#     LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+#     ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#     http:                 www.freescale.com
+#     mail:                 support@freescale.com
+#
+####################################################################
++seg  ResetH_Seg -b 0x20000000 -m 0x7000 -r3  -n ResetH_Seg    # ResetH_Seg
++seg .text       -a ResetH_Seg -r3            -n text          # text
++seg .const      -a text                      -n const         # large constants
++seg .sconst     -a const                     -n sconst        # String constants
+
+
++seg .data       -b 0x1FFF8400 -m 0x7C00      -n data          # data
+
++seg .bsct       -a data                      -n bsct          # initialized variables 
++seg .sdata      -a bsct                      -n sdata         # small initialized variables 
++seg .bss        -a sdata                     -n bss           # uninitialized data
++seg .sbss       -a bss                       -n sbss          # uninitialized small data
+
+
+# Interrupts
++seg __isr_vector  -b 0x1FFF8000 -m 0x0400    -n __isr_vector  # interrupt tables
++seg FlashConfig -c -a const                                   # FlashConfig - suppressed
+
+
+###############################
+#	the project files
+################################
+# Include all of the objects on the command line and 
+# insert them at this location in the link file.
+@*
+
++def ___DATA_RAM=0x1FFF8400 
++def ___VECTOR_RAM=0x1FFF8000
++def ___VECTOR_TABLE=0x1FFF8000
++def ___RAM_VECTOR_TABLE_SIZE_BYTES=0x0
++def __StackTop=0x20000000
++def ___START_BSS=start(bss)
++def ___END_BSS=end(sbss)
++def ___DATA_ROM=start(data)
++def ___DATA_END=end(data)

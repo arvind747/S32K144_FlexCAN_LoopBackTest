@@ -1,0 +1,10 @@
+/*!
+@defgroup gpio General Purpose Input-Output (GPIO)
+@details 
+The S32 SDK provides both HAL and Peripheral Drivers for the General Purpose Input-Output (GPIO) module of S32 SDK devices.
+
+The GPIO allows setting a pin either as an input or output and has dedicated registers for the following operations:
+    - configuring the pin direction (input-output)
+    - reading inputs and writing outputs
+    - setting/clearing/toggling pins without a read-modify-write operation
+ */

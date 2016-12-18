@@ -1,0 +1,148 @@
+/**
+@defgroup dma Direct Memory Access (DMA)
+@brief The S32 SDK provides both HAL and Peripheral Driver for the Enhanced Direct Memory Access (eDMA) module, 
+ as well as HAL for the Direct Memory Access Multiplexer (DMAMUX) module of S32 SDK devices.
+@n
+ The direct memory access engine features are used for performing complex data transfers with minimal intervention 
+ from the host processor. These sections describe the S32 SDK software modules API that can be used for initializing,
+ configuring and triggering DMA transfers.
+*/
+
+/** 
+@defgroup dmamux_hal DMAMUX HAL
+@ingroup dma
+@brief This module covers the functionality of the Direct Memory Access Multiplexer (DMAMUX) peripheral hardware 
+abstraction layer.
+<p>
+  DMAMUX HAL provides the API for reading and writing register bit-fields belonging to the DMAMUX module. It also 
+  provides an initialization function for bringing the module to the reset state.
+</p>
+<p>
+  The DMAMUX HAL functions are used by the eDMA driver. The main functionality provided by DMAMUX HAL API is mapping 
+  the DMA requests from various modules on the chip to eDMA channels.
+</p>
+<p>
+  For higher-level functionality, use the eDMA driver.
+</p>
+*/
+
+/** 
+@defgroup edma_hal EDMA HAL
+@ingroup dma
+@brief This module covers the functionality of the Enhanced Direct Memory Access (eDMA) peripheral hardware 
+abstraction layer.
+<p>
+  eDMA HAL provides the API for reading and writing register bit-fields belonging to the eDMA module. It also provides 
+  an initialization function for bringing the module to the reset state.
+</p>
+<p>
+  The eDMA HAL functions are used by the eDMA driver, as well as other drivers for peripherals that have DMA features 
+  (communication/analogue).
+</p>
+<p>
+  For higher-level functionality, use the eDMA driver.
+</p>
+*/
+
+/**
+@defgroup edma_driver EDMA Driver
+@ingroup dma
+@brief This module covers the functionality of the Enhanced Direct Memory Access (eDMA) peripheral driver
+<p>
+  The eDMA driver implements direct memory access support in the S32144K processor; the main usage of this module 
+  is to offload the bus read/write accesses from the core to the eDMA engine.
+</p>
+  ## Features ##
+   - Memory-to-memory, peripheral-to-memory, memory-to-peripheral transfers
+   - Simple single-block transfers with minimum configuration
+   - Loop transfers for complex use-cases (e.g. double buffering)
+   - Scatter/gather
+   - Dynamic channel allocation
+
+  ## Functionality ##
+
+  ### Initialization ###
+<p>
+  In order to use the eDMA driver, the module must be first initialized, using EDMA_DRV_Init() function.
+  Once initialized, it cannot be initialized again until it is de-initialized, using EDMA_DRV_Deinit(). 
+  The initialization function does the following operations:
+    - resets eDMA and DMAMUX modules
+    - clears the eDMA driver state structure
+    - sets the arbitration mode and halt settings
+    - enables error and channel interrupts
+</p>
+<p>
+  Upon module initialization, the application must initialize the channel(s) to be used, using EDMA_DRV_ChannelInit()
+  function. This operation means enabling a eDMA channel number (or dynamically allocating one), selecting a 
+  source trigger (DMA request multiplexed via DMAMUX) and setting the channel priority. Additionally, a user callback 
+  can be installed for each channel, which will be called when the corresponding interrupt is triggered.
+</p>
+
+  ### Transfer Configuration ###
+<p>
+  After initialization, the transfer control descriptor for the selected channel must be configured before use.
+  Depending on the application use-case, on of the three transfer configuration methods should be called.
+</p>
+<p>
+  #### Single-block transfer ####
+  For the simplest use-case where a contiguous chunk of data must be transferred, the most suitable function is
+  EDMA_DRV_ConfigSingleBlockTransfer(). This takes the source/destination addresses as parameters, as well as transfer
+  type/size and data buffer size, and configures the channel TCD to read/write the data in a single request. The
+  looping and scatter/gather features are not used in this scenario. The driver computes the appropriate offsets for
+  source/destination addresses and set the other TCD fields.
+</p>
+<p>
+  #### Loop transfer ####
+  The eDMA IP on S32K144 supports complex addressing modes. One of the methods to configure complex transfers in
+  multiple requests is using the minor/major loop support. The EDMA_DRV_ConfigLoopTransfer() function sets up the
+  transfer control descriptor for subsequent requests to trigger multiple transfers. The addresses are adjusted after
+  each minor/major loop, according to user setup. This method takes a transfer configuration structure as parameter,
+  with settings for all the fields that control addressing mode (source/destination offsets, minor loop offset, channel
+  linking, minor/major loop count, address last adjustments). It is the responsibility of the application to correctly
+  initialize the configuration structure passed to this function, according to the addressed use-case.
+</p>
+<p>
+  #### Scatter/gather ####
+  The eDMA driver also supports scatter/gather feature, which allows various transfer scenarios. When scatter/gather
+  is enabled, a new TCD structure is automatically loaded in the current channel's TCD registers when a transfer is
+  complete, allowing the application to define multiple different subsequent transfers. The EDMA_DRV_ConfigScatterGatherTransfer()
+  function sets up a list of TCD structures based on the parameters received and configures the eDMA channel for the
+  first transfer; upon completion, the second TCD from the list will be loaded and the channel will be ready to start
+  the new transfer when a new request is received.<br/>
+  The application must allocate memory for the TCD list passed to this function (with an extra 32-bytes buffer, as the
+  TCD structures need to be 32 bytes aligned); nevertheless, the driver will take care of initializing the array of 
+  descriptors, based on the other parameters passed. The function also received two lists of scatter/gather configuration
+  structures (for source and destination, respectively), which define the address, length and type for each transfer.
+  Besides these, the other parameters received are the transfer size, the number of bytes to be transferred on each request and
+  the number of TCD structures to be used. This method will initialize all the descriptors according to user input and
+  link them together; the linkage is done by writing the address of the next descriptor in the appropriate field of each one,
+  similar to a linked-list data structure. The first descriptor is also copied to the TCD registers of the selected channel; 
+  if no errors are returned, after calling this function the channel is configured for the transfer defined by the first 
+  descriptor.
+</p>
+
+  ### Channel Control ###
+<p>
+  The eDMA driver provides functions that allow the user to start, stop, allocate and release an eDMA channel.<br/>
+  The EDMA_DRV_StartChannel() enables the DMA requests for a channel; this function should be called when the channel is already 
+  initialized, as the first request received after the function call will trigger the transfer based on the current values of 
+  the channel's TCD registers.<br/>
+  The EDMA_DRV_StopChannel() function disables requests for the selected channel; this function should be called whenever the
+  application needs to ignore DMA requests for a channel. It is automatically called when the channel is released.<br/>
+  The EDMA_DRV_RequestChannel() function selects a channel to be used by application and updates the driver state structure
+  accordingly. Two types of channel allocation are available:
+    - static: the user passes the channel number as parameter; if the channel is already allocated, the function returns an error;
+    - dynamic: the driver allocates the first available channel and returns its number (or an error if no channel is availabe).
+</p>
+<p>
+  The EDMA_DRV_ReleaseChannel() function frees the hw and sw resources allocated for that channel; it clears the channel state structure,
+  updates the driver state and disables requests for that channel.
+</p>
+
+  ## Important Notes ##
+<p>
+  - Before using the eDMA driver the clock for eDMA and DMAMUX modules must be configured
+  - The driver enables the interrupts for the eDMA module, but any interrupt priority must be done by the application
+  - The driver assumes there is only one eDMA instance implemented in the SoC
+</p>
+*/

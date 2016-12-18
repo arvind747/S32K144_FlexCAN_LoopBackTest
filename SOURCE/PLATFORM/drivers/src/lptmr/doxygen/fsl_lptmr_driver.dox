@@ -1,0 +1,139 @@
+/**
+@defgroup lptmr_driver LPTMR Driver
+@ingroup lptmr
+@brief Low Power Timer Peripheral Driver
+<p>
+The LPTMR is a configurable general-purpose 16-bit counter that has two 
+operational modes: Timer and Pulse-Counter.
+
+Depending on the configured operational mode, the counter in the LPTMR can
+be incremented using a clock input (Timer mode) or an event counter (external
+events like button presses or internal events from different trigger souces).
+
+## Timer Mode ##
+In Timer mode, the LPTMR increments the internal counter from a selectable
+clock source. An optional 16-bit prescaler can be configured.
+
+## Pulse-Counter Mode ##
+In Pulse-Counter Mode, the LPTMR counter increments from a selectable
+trigger source, input pin, which can be an external event (like a button 
+press) or internal events (like triggers from TRGMUX).
+
+An optional 16-bit glitch-fiter can be configured to reject events that have
+a duration below a set period.
+
+## Initialization prerequisites ##
+Before configuring the LPTMR, the peripheral clock must be must be enabled
+from the PCC module.
+
+The peripheral clock must not be confused with the counter clock, which is selectable
+within the LPTMR.
+
+## Driver configuration Modes ##
+The LPTMR driver allows configuring the LPTMR in three modes:
+    - a generic (general) mode, in which all hardware features can be
+    configured (either for Timer or Pulse-Counter mode)
+    - Timer mode, which allows configuration of timer specific options
+    - Pulse-Counter mode, which allows configuration of pulse-counter specifc
+        options
+            
+### General Mode configuration ###
+Configurable options:
+    - work mode (timer or pulse-counter)
+    - enable interrupts and DMA requests
+    - compare value (interrupt generation on counter value)
+    - free running mode (overflow mode of the counter)
+    - input clock selection
+    - prescaler/glitch filter configuration
+    - input pin and polarity (for pulse-counter mode)
+~~~~~{.c}
+/* LPTMR initialization structure for General Mode */
+lptmr_general_config_t config = {
+    .dmaRequest = false,
+    .interruptEnable = true,
+    .pinSelect = LPTMR_PINSELECT_TRGMUX,
+    .pinPolarity = LPTMR_PINPOLARITY_RISING,
+    .freeRun = false,
+    .workMode = LPTMR_WORKMODE_TIMER,
+    .prescaler = LPTMR_PRESCALE_4_GLITCHFILTER_2,
+    .bypassPrescaler = false,
+    .clockSelect = LPTMR_CLOCKSOURCE_SIRC,
+    .compareValue = 1000u,
+};
+
+/* Enable peripheral clock for LPTMR */
+PCC_HAL_SetClockSourceSel(PCC, PCC_LPTMR0_CLOCK, CLK_SRC_FIRC);
+PCC_HAL_SetClockMode(PCC, PCC_LPTMR0_CLOCK, true);
+
+/* Initialize the LPTMR and start the counter in a separate operation */
+status = LPTMR_DRV_InitGeneral(0, &config, false);
+LPTMR_DRV_StartCounter(0);
+~~~~~
+        
+### Timer configuration ###
+Configurable options:
+    - enable interrupts and DMA requests
+    - free running mode (overflow mode of the counter)
+    - compare values configurable in micro-seconds
+    - input clock selection
+~~~~~{.c}
+/* LPTMR initialization structure for Timer Mode */
+lptmr_timer_config_t config = {
+    .dmaRequest = false,
+    .interruptEnable = true,
+    .freeRun = false,
+    .clockSelect = LPTMR_CLOCKSOURCE_SIRC,
+    .compareValueUs = 20000u,
+    .maxCompareValueUs = 100000u, /* not used if freeRun is false */
+};
+
+/* Enable peripheral clock for LPTMR */
+PCC_HAL_SetClockSourceSel(PCC, PCC_LPTMR0_CLOCK, CLK_SRC_FIRC);
+PCC_HAL_SetClockMode(PCC, PCC_LPTMR0_CLOCK, true);
+
+/* Initialize the LPTMR and start the counter in a separate operation */
+status = LPTMR_DRV_InitTimer(0, &config, false);
+LPTMR_DRV_StartCounter(0);
+~~~~~
+
+### Pulse-Counter configuration ###
+Configurable options:
+    - enable interrupts and DMA requests
+    - input pin and polarity (counter increment source)
+    - free running mode (overflow mode of the counter)
+    - glitch filter configuration
+    - input clock selection
+    - compare value (interrupt generation on counter value)
+~~~~~{.c}
+/* LPTMR initialization structure for Pulse-Counter Mode */
+lptmr_pulsecounter_config_t config = {
+    .dmaRequest = false,
+    .interruptEnable = true,
+    .pinSelect = LPTMR_PINSELECT_TRGMUX,
+    .pinPolarity = LPTMR_PINPOLARITY_RISING,
+    .freeRun = false,
+    .prescaler = LPTMR_PRESCALE_4_GLITCHFILTER_2,
+    .bypassPrescaler = false,
+    .clockSelect = LPTMR_CLOCKSOURCE_SIRC,
+    .compareValue = 1000u,
+};
+
+/* Enable peripheral clock for LPTMR */
+PCC_HAL_SetClockSourceSel(PCC, PCC_LPTMR0_CLOCK, CLK_SRC_FIRC);
+PCC_HAL_SetClockMode(PCC, PCC_LPTMR0_CLOCK, true);
+
+/* Initialize the LPTMR and start the counter in a separate operation */
+status = LPTMR_DRV_InitPulseCounter(0, &config, false);
+LPTMR_DRV_StartCounter(0);
+~~~~~
+</p>
+<p>
+## API ##
+Some functions in this API can be used in all use-case modes, some are specific
+to one of the two operational modes.
+
+Functions that are operational-mode specific will return an error when are called
+in the wrong operational mode.
+</p>
+
+*/

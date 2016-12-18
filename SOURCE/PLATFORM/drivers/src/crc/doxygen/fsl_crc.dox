@@ -1,0 +1,63 @@
+/*!
+ * @defgroup crc Cyclic Redundancy Check (CRC)
+ * @details The S32 SDK provides both HAL and Peripheral Drivers for
+ *  the Cyclic Redundancy Check (CRC) module of S32 SDK devices.@n
+ * @n
+ * The cyclic redundancy check (CRC) module generates 16/32-bit CRC code for
+ *  error detection.@n
+ * The CRC module provides a programmable polynomial, seed, and
+ *  other parameters required to implement a 16-bit or 32-bit CRC standard. @n
+ * The 16/32-bit code is calculated for 32 bits of data at a time.@n
+ */
+
+/*!
+ * @defgroup crc_hal CRC HAL
+ * @ingroup crc
+ * @details This section describes the programming interface of the CRC HAL driver.
+ */
+
+/*!
+@defgroup crc_driver CRC Driver
+@ingroup crc
+@details This section describes the programming interface of the CRC driver.
+
+# CRC Driver Initialization {#CRCInit}
+
+To initialize the CRC module, call CRC_DRV_Init() function and pass
+ the user configuration data structure to it.
+
+This is example code to configure the CRC driver:
+
+~~~~~{.c}
+  /* Configuration structure crc1_InitConfig0 */
+  const crc_user_config_t crc1_InitConfig0 = {
+      .crcWidth = CRC_BITS_16,
+      .seed = 0x0000FFFFU,
+      .polynomial = 0x00001021U,
+      .writeTranspose = CRC_TRANSPOSE_BYTES,
+      .readTranspose = CRC_TRANSPOSE_NONE,
+      .complementChecksum = false
+  };
+
+  /* Initializes the CRC */
+  CRC_DRV_Init(0U, crc1_InitConfig0);
+~~~~~
+
+# CRC Driver Operation {#CRCOp}
+Function CRC_DRV_Configure() shall be used to write user configuration to CRC
+ hardware module before starting operation by calling CRC_DRV_GetCrcBlock().
+
+This is example code to Configure and get CRC block:
+
+~~~~~{.c}
+    uint8_t buffer[] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30};
+    uint32_t result;
+
+    /* Set the CRC configuration */
+    CRC_DRV_Configure(0U, crc1_InitConfig0);
+
+    /* Get result of CRC calculation */
+    result = CRC_DRV_GetCrcBlock(instance, buffer, 10U);
+~~~~~
+
+*/

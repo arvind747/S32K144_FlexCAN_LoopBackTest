@@ -1,0 +1,170 @@
+/*!
+ * @defgroup mpu Memory Protection Unit (MPU)
+ * @details The S32 SDK provides both HAL and Peripheral Drivers for
+ *  the Memory Protection Unit (MPU) module of S32 SDK devices.@n
+ * @n
+ *  The MPU concurrently monitors all system bus transactions and evaluates their
+ *  appropriateness using pre-programmed region descriptors that define memory spaces and
+ *  their access rights. Memory references that have sufficient access control rights are
+ *  allowed to complete, while references that are not mapped to any region descriptor or
+ *  have insufficient rights are terminated with a protection error response.
+ */
+
+
+/*!
+@defgroup mpu_hal MPU HAL
+@ingroup mpu
+@brief This module covers the functionality of the Memory Protection Unit (MPU) peripheral.
+<p>
+  MPU HAL provides the API for reading and writing register bit-fields belonging to the MPU module.
+</p>
+<p>
+  For higher-level functionality, use the MPU driver.
+</p>
+*/
+
+/*!
+@defgroup mpu_driver MPU Driver
+@ingroup mpu
+@brief The S32 SDK provides a set of APIs/services to configure the Memory Protection Unit (MPU) module of S32 devices.
+@details Use the MPU driver to program the region descriptors that define memory spaces
+and their access rights. After initialization, the MPU concurrently monitors the system bus
+transactions and evaluates the appropriateness
+
+# Pre-Initialization information of MPU module
+
+1. Before using the MPU driver the protocol clock of the module must be configured by the application using PCC module.
+2. Bus false or Hard fault exception must be configured to handle MPU access violation.
+
+
+## Initialization and Deinitialize{#MPUInit}
+
+To initialize the MPU module, call the MPU_DRV_Init() function and provide the user configuration data structure.
+This function sets the configuration of the MPU module automatically and enables the MPU module. \n
+Note that the configuration for region 0:
+ - Only access right for <strong>CORE, DMA</b> can be <strong>changed</strong>.
+ - Access right for <em>DEBUG, start address and end address</em> <strong>ignored</strong>.
+
+This is example code to configure the MPU driver:
+
+~~~~~{.c}
+    /*! Master access rights configuration 0 for region 0 */
+    mpu_master_access_right_t AccessRightConfig0[] =
+    {
+        /*! CORE_0 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_CORE,       /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_USER_NONE,        /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        },
+
+        /*! DEBUGGER_0 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_DEBUGGER,   /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_USER_RWX,         /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        },
+
+        /*! DMA_0 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_DMA,        /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_USER_RW,          /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        }
+    };
+
+    /*! Master access rights configuration 1 for region 1, region 4 and region 7 */
+    mpu_master_access_right_t AccessRightConfig1[] =
+    {
+        /*! CORE_1 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_CORE,       /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_RWX_USER_NONE,    /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        },
+
+        /*! DEBUGGER_1 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_DEBUGGER,   /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_USER_RWX,         /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        },
+
+        /*! DMA_1 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_DMA,        /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_USER_RW,          /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        }
+    };
+
+    /*! Master access rights configuration 2 for region 2 and region 5 */
+    mpu_master_access_right_t AccessRightConfig2[] =
+    {
+        /*! CORE_2 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_CORE,       /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_USER_WX,          /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        },
+
+        /*! DEBUGGER_2 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_DEBUGGER,   /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_USER_RWX,         /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        },
+
+        /*! DMA_2 */
+        {
+            .masterNum = FSL_FEATURE_MPU_MASTER_DMA,        /*!< Master number      */
+            .accessRight = MPU_SUPERVISOR_USER_RW,          /*!< Access right       */
+            .processIdentifierEnable = false                /*!< Disable identifier */
+        }
+    };
+
+    /* User region configuration */
+    const mpu_user_config_t memProtect1_UserConfig[] =
+    {
+        /*! Region 0 */
+        {
+            .startAddr      = 0x00000000UL,         /*!< Memory region start address    */
+            .endAddr        = 0xFFFFFFFFUL,         /*!< Memory region end address      */
+            .masterAccRight = AccessRightConfig0,   /*!< Master access right            */
+            .processIdentifier  = 0U,               /*!< Process identifier             */
+            .processIdMask  = 0U                    /*!< Process identifier mask        */
+        },
+
+        /*! Region 1 */
+        {
+            .startAddr      = 0x00000000UL,         /*!< Memory region start address    */
+            .endAddr        = 0x00080000UL,         /*!< Memory region end address      */
+            .masterAccRight = AccessRightConfig1,   /*!< Master access right            */
+            .processIdentifier  = 0U,               /*!< Process identifier             */
+            .processIdMask  = 0U                    /*!< Process identifier mask        */
+        },
+
+        /*! Region 2 */
+        {
+            .startAddr      = 0x1FF00000UL,         /*!< Memory region start address    */
+            .endAddr        = 0x20000000UL,         /*!< Memory region end address      */
+            .masterAccRight = AccessRightConfig2,   /*!< Master access right            */
+            .processIdentifier  = 0U,               /*!< Process identifier             */
+            .processIdMask  = 0U                    /*!< Process identifier mask        */
+        }
+    };
+
+    /* Initializes the MPU module */
+    MPU_DRV_Init(0U, 3U, memProtect1_UserConfig);
+~~~~~
+
+## Basic Control Operations {#MPUBasicOp}
+
+After MPU initialization, the MPU_DRV_SetMasterAccessRights() can be used to change the access rights
+for special master ports and for special region numbers. @n
+
+The MPU_DRV_SetRegionConfig() can be used to set the whole region with the start/end address with access rights. @n
+The MPU_DRV_GetDetailErrorAccessInfo() API is provided to get the error status of a special slave port.
+When an error happens in this port, the MPU_DRV_GetDetailErrorAccessInfo() API is provided to get the detailed error information
+
+*/

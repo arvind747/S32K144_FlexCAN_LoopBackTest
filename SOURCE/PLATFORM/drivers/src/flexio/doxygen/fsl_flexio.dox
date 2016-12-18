@@ -1,0 +1,11 @@
+/*!
+@defgroup flexio Flexible I/O (FlexIO)
+@details The FlexIO is a highly configurable module providing a wide range of functionality
+including:
+ - Emulation of a variety of serial communication protocols, such as SPI, I2C, I2S or UART, 
+ while requiring low CPU overhead and being more efficient that having multiple dedicated 
+ peripherals for each protocol.
+ - Flexible 16-bit timers with support for a variety of trigger, reset, enable and disable
+conditions
+ - PWM/Waveform generation
+ */

@@ -1,0 +1,83 @@
+/*!
+@defgroup fsl_scg_hal System Clock Generator (SCG)
+@brief This module covers System Clock Generator module functionality
+@details The system clock generator (SCG) module provides the system clocks of the MCU. The
+SCG contains a phase-locked loop (PLL), a slow internal reference clock (SIRC), a fast
+internal reference clock (FIRC), and the system oscillator clock (SOSC).
+
+The S32 SDK provides a HAL driver for the System Clock Generator (SCG) module.
+This section describes the programming interface of the SCG HAL driver.
+The SCG HAL driver configures the SCG (System Clock Generator). 
+
+SCG driver provides three kinds of APIs:
+
+1. APIs for MCU system clock
+2. APIs for clock source configuration
+
+# APIs for MCU system clock 
+
+MCU system clock configuration includes clock source and dividers. There are dedicated control
+registers for RUN mode, VLPR mode and HSRUN mode. When MCU switches to new power mode, the
+configuration for corresponding mode will be used. SCG driver provides the APIs to set and get
+the values of this registers.
+
+Here is an example on how to configure the clock source and dividers to RUN mode:
+
+@code
+ //Example code for how to setup system clock source and dividers for RUN mode:
+
+  scg_system_clock_config_t config;
+ 
+  config.src     = SCG_SYSTEM_CLOCK_SRC_SIRC;
+  config.divPlat = 1;
+  config.divBus  = 2;
+  config.divCore = 2;
+  config.divSlow = 2;
+
+  SCG_HAL_SetSystemClockConfig(SCG, SCG_SYSTEM_CLOCK_MODE_RUN, &config);
+@endcode
+
+# APIs for clock source configuration
+
+SCG has four clock sources, system OSC, system PLL, fast IRC and slow IRC. For each clock
+source, SCG driver provides such APIs:
+
+- API to get the default configuration structure.
+  This configuration structure could make the clock work, for special use case, please modify
+  this structure.
+- API to initialize the clock source based on configuration structure.
+- API to get the frequency of this clock source.
+- API to get the asynchronous frequency of this clock source.
+- API to de-initialize the clock source.
+
+Here is an example on how to setup the clock source base on SCG HAL APIs.
+
+@code
+ //Example code for how to setup system OSC.
+
+scg_sys_osc_config_t config;
+
+// Get default configuration.
+SCG_HAL_GetSysOscDefaultConfig(&config);
+
+// Modify according to board setting.
+// ...
+
+// Setup system OSC.
+SCG_HAL_InitSysOsc(SCG, &config);
+
+// De-init system OSC.
+SCG_HAL_DeinitSysOsc(SCG);
+@endcode
+
+# Important Notes
+
+Some configurations of the clock source can be done only when the clock source
+is disabled, so the function `CLOCK_HAL_InitXxx` will disable the clock source, then
+re-configure it and enable it. As a result, before `CLOCK_HAL_InitXxx`, please make sure
+the clock source is not used:
+- as the system clock.
+- as clock for on-chip peripherals.
+- as clock source for other clock source.
+
+@}*/

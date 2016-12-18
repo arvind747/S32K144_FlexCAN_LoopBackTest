@@ -1,0 +1,137 @@
+/*!
+   @defgroup flexcan Controller Area Network with Flexible Data Rate (FlexCAN)
+   The S32 SDK provides both HAL and Peripheral Driver for the FlexCAN module of S32 SDK devices.
+   
+   ## Hardware background ##
+
+   The FlexCAN module is a communication controller implementing the CAN protocol
+   according to the ISO 11898-1 standard and CAN 2.0 B protocol specifications.
+   The FlexCAN module is a full implementation of the CAN protocol specification, the
+   CAN with Flexible Data rate (CAN FD) protocol and the CAN 2.0 version B protocol,
+   which supports both standard and extended message frames and long payloads up to 64
+   bytes transferred at faster rates up to 8 Mbps. The message buffers are stored in an
+   embedded RAM dedicated to the FlexCAN module.
+
+   The FlexCAN module includes these distinctive features:
+   - Full implementation of the CAN with Flexible Data Rate (CAN FD) protocol
+   specification and CAN protocol specification, Version 2.0 B
+      - Standard data frames
+      - Extended data frames
+      - Zero to sixty four bytes data length
+      - Programmable bit rate (see the chip-specific FlexCAN information for the
+      specific maximum rate configuration)
+      - Content-related addressing
+   - Compliant with the ISO 11898-1 standard
+   - Flexible mailboxes configurable to store 0 to 8, 16, 32 or 64 bytes data length
+   - Each mailbox configurable as receive or transmit, all supporting standard and
+   extended messages
+   - Full-featured Rx FIFO with storage capacity for up to six frames
+   - Flexible message buffers (MBs), totaling 32 message buffers of 8 bytes data length
+   each, configurable as Rx or Tx
+   - Listen-Only mode capability
+   - Programmable Loop-Back mode supporting self-test operation
+   - Maskable interrupts
+   - Short latency time due to an arbitration scheme for high-priority messages
+   - CRC status for transmitted message
+   - Selectable priority between mailboxes and Rx FIFO during matching process
+   - Powerful Rx FIFO ID filtering, capable of matching incoming IDs against either 128
+   extended, 256 standard, or 512 partial (8 bit) IDs, with up to 32 individual masking
+   capability
+   - 100% backward compatibility with previous FlexCAN version
+      
+   @addtogroup flexcan_driver
+   @ingroup flexcan
+
+   ## How to use the FlexCAN driver in your application ##
+   In order to be able to use the FlexCAN in your application, the first thing to do is
+   initializing it with the desired configuration. This is done by calling the <b>FLEXCAN_DRV_Init</b>
+   function. One of the arguments passed to this function is the configuration which will be
+   used for the FlexCAN, specified by the <b>flexcan_user_config_t</b> structure.
+   
+   The <b>flexcan_user_config_t</b> structure allows you to configure the following:
+      - the number of message buffers needed;
+      - the number of RX FIFO ID filters needed;
+      - enable/disable the RxFIFO feature;
+      - the operation mode, which can be one on the following:
+         - normal mode;
+         - listen-only mode;
+         - loopback mode;
+         - freeze mode;
+         - disable mode;
+      - the payload size of the message buffers:
+         - 8 bytes;
+         - 16 bytes (only available with the FD feature enabled);
+         - 32 bytes (only available with the FD feature enabled);
+         - 64 bytes (only available with the FD feature enabled);
+      - enable/disable the Flexible Data-rate feature.
+    
+   After initializing the driver, the bitrate must be set using the <b>FLEXCAN_DRV_SetBitrate</b> function.
+   This function takes as paramter a <b>flexcan_time_segment_t</b> structure, with the following fields:
+      - propagation segment;
+      - phase segment 1;
+      - phase segment 2;
+      - clock pre-divider;
+      - resync jump width.
+   
+   Details about these fields can be found in the reference manual.
+   
+   In order to use a mailbox for transmission/reception, it should be initialized using either
+   <b>FLEXCAN_DRV_ConfigRxMb</b>, <b>FLEXCAN_DRV_ConfigRxFifo</b> or <b>FLEXCAN_DRV_ConfigTxMb</b>.
+   
+   After having the mailbox configured, you can start sending/receiving using it by calling one
+   of the following functions:
+      - FLEXCAN_DRV_Send;
+      - FLEXCAN_DRV_SendBlocking;
+      - FLEXCAN_DRV_RxMessageBuffer;
+      - FLEXCAN_DRV_RxMessageBufferBlocking;
+      - FLEXCAN_DRV_RxFifo;
+      - FLEXCAN_DRV_RxFifoBlocking.
+
+
+   #### Example: ####
+@code
+
+    #define FSL_CANCOM1 (0U)
+
+    flexcan_state_t canCom1_State;
+   
+    flexcan_user_config_t canCom1_InitConfig0 = {
+        .max_num_mb = 2U,
+        .num_id_filters = FLEXCAN_RX_FIFO_ID_FILTERS_8,
+        .is_rx_fifo_needed = false,
+        .flexcanMode = FLEXCAN_NORMAL_MODE,
+        .payload = FLEXCAN_PAYLOAD_SIZE_64,
+        .fd_enable = true
+    };
+     
+    /* Initialize FlexCAN driver */
+    FLEXCAN_DRV_Init(FSL_CANCOM1, &canCom1_State, &canCom1_InitConfig0);
+
+    /* Set bit rate */
+    flexcan_time_segment_t myBitRate = {0x04, 0x07, 0x01, 0x11, 3};
+    FLEXCAN_DRV_SetBitrate(FSL_CANCOM1, &myBitRate);
+
+    /* Set information about the data to be received */
+    flexcan_data_info_t dataInfo;
+    dataInfo.msg_id_type = FLEXCAN_MSG_ID_STD;
+    dataInfo.data_length = 64;
+    dataInfo.fd_enable = FLEXCAN_FD_ENABLE;
+    dataInfo.fd_padding = 3;
+    dataInfo.enable_brs = FLEXCAN_BRS_ENABLE;
+    
+    /* Configure Rx message buffer with index 1 to receive frames with ID 1 */
+    FLEXCAN_DRV_ConfigRxMb(FSL_CANCOM1, 1, &dataInfo, 1);
+
+    /* Receive a frame in the recvBuff variable */
+    flexcan_msgbuff_t recvBuff;
+    recvBuff.msgId = 1;
+    FLEXCAN_DRV_RxMessageBuffer(FSL_CANCOM1, 1, &recvBuff);
+    /* Wait for the message to be received */
+    while (FLEXCAN_DRV_GetReceiveStatus(FSL_CANCOM1) == FLEXCAN_STATUS_RX_BUSY);
+
+    /* De-initialize driver */
+    FLEXCAN_DRV_Deinit(FSL_CANCOM1);
+
+@endcode
+
+@}*/

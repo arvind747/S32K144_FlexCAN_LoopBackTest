@@ -1,0 +1,52 @@
+/*!
+ * @defgroup gpio_hal GPIO HAL
+ * @ingroup gpio
+ * @brief General Purpose Input/Output Hardware Abstraction Layer.
+ *
+ * This HAL provides low-level access to all hardware features of the GPIO module.
+ *
+ * This module provides methods for basic operations on the pins of the GPIO
+ * modules: configure data direction, read data, write, set and toggle pins.
+ *
+ * The methods operate on the entire port (all 32 pins) so bit masks must be used
+ * to access individual bits. Some methods only act on the bits that have value
+ * '1' (leaving bits with value '0' unchanged), but others will affect all the
+ * pins, in this case a Read-Modify-Write operation is needed to keep the previous
+ * configuration.
+ *
+ * This module assumes that the clocking and PORT configuration have been set up
+ * correctly. To see how to configure these modules, please refer to the Clock
+ * Manager (PCC HAL) and PORT modules.
+ *
+ * In the following documentation the terms 'Set' and 'Clear' are used to refer
+ * to values of pins:
+ * - The 'Clear' value is logic value of '0', also referred to as LOW
+ * - The 'Set' value is logic value of '1', also referred to as HIGH
+ *
+ * Writing a port means configuring each of its pins with the bit value corresponding
+ * to the pin's position.
+ *
+ * The Set, Clear and Toggle methods operate only on pins with corresponding bits
+ * set to '1' in the bit mask. These methods do not require a Read-Modify-Write
+ * operation, as they will leave pins corresponding to bits with value '0'
+ * unchanged.
+ *
+ * To use a pin as a GPIO pin, it needs to be configured as GPIO and,
+ * optionally, have pull up/down, drive strength etc. configured. This needs to
+ * be done using the PCC and PORT modules. The example below shows how to
+ * configure and use Pin 7 of Port C.
+ *
+ * ~~~{.c}
+ * const uint8_t pin_num = 7U;
+ * PCC_Type *pccBase = PCC_BASE_PTRS;
+ * PCC_HAL_SetClockMode(pccBase, PCC_PORTC_INDEX, true);
+ *
+ * PORT_HAL_SetMuxModeSel(PORTC, pin_num, PORT_MUX_AS_GPIO);
+ * PORT_HAL_SetDriveStrengthMode(PORTC, pin_num, PORT_HIGH_DRIVE_STRENGTH);
+ *
+ * GPIO_HAL_SetPinsDirection(PTC, 1U<<pin_num);
+ *
+ * GPIO_HAL_SetPins(PTC, 1U<<pin_num);
+ * ~~~
+ *
+ */

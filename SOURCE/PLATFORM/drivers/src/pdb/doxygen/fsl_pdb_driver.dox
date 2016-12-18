@@ -1,0 +1,134 @@
+/*!
+ * @defgroup pdb_driver PDB Driver
+ * @ingroup pdb
+ * @brief Programmable Delay Block Peripheral Driver.
+ *
+ * ## Overview ##
+ * 
+ * This section describes the programming interface of the PDB Peripheral driver. The PDB peripheral driver configures the PDB (Programmable Delay Block). It handles the triggers for ADC 
+ * and pulse out to the CMP and the PDB counter.
+ * 
+ * ## PDB Driver model building ##
+ * 
+ * There is one main PDB counter for all triggers. When the indicated external trigger input arrives, the PDB counter launches and is increased by setting clock. The counter trigger milestones
+ * for ADC and the PDB counter and wait for the PDB counter. Once the PDB counter hits each milestone, also called the critical delay value, the corresponding event is triggered and the trigger 
+ * signal is sent out to trigger other peripherals. Therefore, the PDB module is a collector and manager of triggers.
+ * 
+ * ## PDB Initialization ##
+ * 
+ * The core feature of the PDB module is a programmable timer/counter. Additional features enable and set the milestone for the corresponding trigger. The user should 
+ * provide a configuration suitable for the application requirements. Call the API of <b>PDB_DRV_Init()</b> function to initialize the PDB timer/counter.
+ * 
+ * All triggers share the same counter. 
+ * 
+ * The basic timing/counting step is set when initializing the main PDB counter:
+ * 
+ * The basic timing/counting step = F_BusClkHz / pdb_timer_config_t.clkPreDiv / pdb_timer_config_t.clkPreMultFactor
+ * 
+ * The F_BusClkHz is the frequency of bus clock in Hertz. The "clkPreDiv" and "clkPreMultFactor" are in the pdb_timer_config_t structure. All triggering milestones are based on this step.
+ * ## PDB Call diagram ##
+ * 
+ * Three kinds of typical use cases are designed for the PDB module.
+ * 
+ * - Normal Timer/Counter. Normal Timer/Counter is the basic case. The Timer/Counter starts after the PDB is initialized and the milestone for the PDB Timer/Counter is set. After it is triggered 
+ * and when the counter hits the milestone, the interrupt request occurs if enabled. In continuous mode, when the counter hits the upper limit, it returns zero and counts again.
+ * - Trigger for ADC module. When the ADC trigger is enabled, a delay value for ADC trigger is set as the milestone. At least two ADC channel groups are provided. Likewise, there are more than two 
+ * pre-triggers for ADC. Each pre-trigger is related to one channel group and can be enabled separately in the PDB module. When the PDB counter hits the milestone for the ADC pre-trigger, it triggers
+ * the ADC's conversion on the indicated channel group. To maximize the feature, the ADC should be configured to enable the hardware trigger mode.
+ * - Trigger for pulse out to the CMP module. The pulse-out trigger is attached to the main PDB counter. There are two milestones for each pulse out channel, a milestone for level high and for level 
+ * low, which makes a sample window for the CMP module.
+ * 
+ * These are the examples to initialize and configure the PDB driver for typical use cases.
+ * 
+ * <b>Normal Timer/Counter:</b>
+ *
+ * ~~~~~{.c}
+ * #define PDB_INSTANCE    0UL 
+ *
+ * static volatile uint32_t gPdbIntCounter = 0U;
+ * static volatile uint32_t gPdbInstance = 0U;
+ * static void PDB_ISR_Counter(void);
+ * void PDB_TEST_NormalTimer(uint32_t instance)
+ * {
+ *     pdb_timer_config_t PdbTimerConfig;
+ *     PdbTimerConfig.loadValueMode         = PDB_LOAD_VAL_IMMEDIATELY;
+ *     PdbTimerConfig.seqErrIntEnable       = false;
+ *     PdbTimerConfig.clkPreDiv             = PDB_CLK_PREDIV_BY_8;
+ *     PdbTimerConfig.clkPreMultFactor      = PDB_CLK_PREMULT_FACT_AS_40;
+ *     PdbTimerConfig.triggerInput          = PDB_SOFTWARE_TRIGGER;
+ *     PdbTimerConfig.continuousModeEnable  = true;
+ *     PdbTimerConfig.dmaEnable             = false;
+ *     PdbTimerConfig.intEnable             = true;
+ *     PDB_DRV_Init(instance, &PdbTimerConfig);
+ *     PDB_DRV_SetTimerModulusValue(instance, 0xFFFU);
+ *     PDB_DRV_SetValueForTimerInterrupt(instance, 0xFFU);
+ *     PDB_DRV_LoadValuesCmd(instance);
+ *     gPdbIntCounter = 0U;
+ *     gPdbInstance = instance;
+ *     PDB_DRV_SoftTriggerCmd(instance);
+ *     while (gPdbIntCounter < 20U) {}
+ *     PRINTF("PDB Timer's delay interrupt generated.\r\n");
+ *     PDB_DRV_Deinit(instance);
+ *     PRINTF("OK.\r\n");
+ * }
+ *
+ * void PDB_IRQHandler()
+ * {
+ *     PDB_DRV_ClearTimerIntFlag(PDB_INSTANCE);
+ *     if (gPdbIntCounter >= 0xFFFFU)
+ *     {
+ *         gPdbIntCounter = 0U;
+ *     }
+ *     else
+ *     {
+ *         gPdbIntCounter++;
+ *     }
+ * }
+ * 
+ * #if PDB_INSTANCE < 1
+ *     void PDB0_IRQHandler(void)
+ *     {   
+ *         PDB_IRQHandler();
+ *     }
+ * #elif PDB_INSTANCE < 2
+ *     void PDB1_IRQHandler(void)
+ *     {   
+ *         PDB_IRQHandler();
+ *     }
+ * #endif
+ * 
+ * ~~~~~
+ * <b>Trigger for ADC module:</b>
+ * ~~~~~{.c}
+ * void PDB_TEST_AdcPreTrigger(uint32_t instance)
+ * {
+ *     pdb_timer_config_t PdbTimerConfig;
+ *     pdb_adc_pretrigger_config_t PdbAdcPreTriggerConfig;
+ *     PdbTimerConfig.loadValueMode         = PDB_LOAD_VAL_IMMEDIATELY;
+ *     PdbTimerConfig.seqErrIntEnable       = false;
+ *     PdbTimerConfig.clkPreDiv             = PDB_CLK_PREDIV_BY_8;
+ *     PdbTimerConfig.clkPreMultFactor      = PDB_CLK_PREMULT_FACT_AS_40;
+ *     PdbTimerConfig.triggerInput          = PDB_SOFTWARE_TRIGGER;
+ *     PdbTimerConfig.continuousModeEnable  = false;
+ *     PdbTimerConfig.dmaEnable             = false;
+ *     PdbTimerConfig.intEnable             = false;
+ *     PDB_DRV_Init(instance, &PdbTimerConfig);
+ *
+ *     PdbAdcPreTriggerConfig.adcPreTriggerIdx              = 0U;
+ *     PdbAdcPreTriggerConfig.preTriggerEnable              = true;
+ *     PdbAdcPreTriggerConfig.preTriggerOutputEnable        = true;
+ *     PdbAdcPreTriggerConfig.preTriggerBackToBackEnable    = false;
+ *     PDB_DRV_ConfigAdcPreTrigger(instance, 0U, &PdbAdcPreTriggerConfig);
+ *
+ *     PDB_DRV_SetTimerModulusValue(instance, 0xFFFU);
+ *     PDB_DRV_SetAdcPreTriggerDelayValue(instance, 0U, 0U, 0xFFU);
+ *     PDB_DRV_LoadValuesCmd(instance);
+ *     PDB_DRV_SoftTriggerCmd(instance);
+ *     while (1U != PDB_DRV_GetAdcPreTriggerFlags(instance, 0U, 1U)) {}
+ *     PDB_DRV_ClearAdcPreTriggerFlags(instance, 0U, 1U);
+ *     PRINTF("PDB ADC PreTrigger generated.\r\n");
+ *     PDB_DRV_Deinit(instance);
+ *     PRINTF("OK.\r\n");
+ * }
+ * ~~~~~
+ */

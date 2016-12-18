@@ -1,0 +1,12 @@
+/** 
+@defgroup flexio_hal FlexIO HAL
+@ingroup flexio
+@brief FlexIO Hardware Abstraction Layer (FLEXIO_HAL)
+<p>
+This module covers the functionality of the Flexible I/O (FlexIO) peripheral.
+
+FlexIO HAL provides the API for reading and writing register bit-fields belonging to the FlexIO module. It also provides an initialization function for bringing the module to the reset state.
+
+For higher-level functionality, use the FlexIO driver. </p>
+</p>
+*/

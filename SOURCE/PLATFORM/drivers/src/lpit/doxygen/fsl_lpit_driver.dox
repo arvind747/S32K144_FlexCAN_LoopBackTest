@@ -1,0 +1,89 @@
+/**
+@defgroup lpit Low Power Interrupt Timer (LPIT)
+@details The S32 SDK provides both HAL and Peripheral Drivers for
+the Low Power Interrupt Timer (LPIT) module of S32 SDK devices.@n
+@n
+The Low Power Periodic Interrupt Timer (LPIT) is a multi-channel timer module
+generating independent pre-trigger and trigger outputs. These timer channels can operate
+individually or can be chained together. The LPIT can operate in low power modes if
+configured to do so. The pre-trigger and trigger outputs can be used to trigger other
+modules on the device.@n
+LPIT module has 4 mode operations: 32-bit Periodic Counter, Dual 16-bit Periodic Counter, 32-bit Trigger Accumulator,
+and 32-bit Trigger Input Capture. In addition, LPIT has 3 bits TSOI,TROT,TSOT to control operation of timer channel in these modes.@n
+ */
+
+
+/*!
+@defgroup lpit_hal LPIT HAL
+@ingroup lpit
+@brief This module covers the functionality of the Low Power Interrupt Timer (LPIT) peripheral.
+LPIT HAL provides the API for reading and writing register bit-fields belonging to the LPIT module.
+For higher-level functionality, use the LPIT driver.
+ */
+
+/*!
+@defgroup lpit_driver LPIT Driver
+@ingroup lpit
+@brief The S32 SDK provides a set of APIs/services to configure the Low Power Interrupt Timer (LPIT) module of S32 devices.
+@details Use the LPIT driver to enable functional clock for LPIT module, initialize operation of LPIT when MCU is in Debug and DOZE mode.
+After initialize for LPIT module, then initialize for channels of LPIT module, including: enabling interrupt for timer channel,
+setting mode operation, trigger source, trigger select, reload on trigger(TROT), stop on interrupt(TSOI),
+start on trigger(TSOT) and period of timer counter.
+
+
+# Pre-Initialization information of LPIT module
+
+1. Before using the LPIT driver, the protocol clock of the module must be configured by the application using PCC module.
+2. Configures different peripherals if you want to use them in LPIT interrupt routine.
+3. Provide configuration data structure to LPIT initialization function.
+
+# Initialization and De-initialization{#LPITInit}
+
+- To initialize the LPIT module, call the LPIT_DRV_Init() function with the user configuration data structure.
+This function configures LPIT module to run or not run when MCU is in DEBUG and DOZE (Low Leakage Stop, Stop/Wait) modes and enable LPIT module.@n
+- After call the LPIT_DRV_Init() function, call LPIT_DRV_InitChannel () function with user channel configuration structure to initialize timer channel.@n
+- To De-initialize the LPIT module, call the LPIT_DRV_Deinit() function. This function disables all LPIT timer channels.@n
+This is example code to configure the LPIT module:
+
+~~~~~{.c}
+    /* LPIT module configuration stucture (LPIT is enabled in DEBUG and DOZE modes) */
+    lpit_user_config_t lpitconfig =
+    {
+        .enableRunInDebug = true,
+        .enableRunInDoze  = true
+    };
+
+    /* Channel 0 configuration structure (timer mode is 32-bit Periodic Counter of 0.5 second
+    and interrupt is triggered when timeout*/
+    lpit_user_channel_config_t chnlconfig =
+    {
+        .chainChannel = false,
+        .isInterruptEnabled = true,
+        .timerMode = LPIT_PERIODIC_COUNTER,
+        .triggerSelect = 0,
+        .triggerSource = LPIT_TRIGGER_SOURCE_EXTERNAL,
+        .enableReloadOnTrigger = false,
+        .enableStopOnInterrupt = false,
+        .enableStartOnTrigger = false,
+        .periodUs = 500000U
+    };
+
+
+    /* Initializes the LPIT module. */
+    LPIT_DRV_Init(BOARD_LPIT_INSTANCE, &lpitconfig);
+    /* Initializes the channel 0. */
+    LPIT_DRV_InitChannel(BOARD_LPIT_INSTANCE, 0, &chnlconfig);
+    ....
+    /* De-initializes the LPIT module. */
+    LPIT_DRV_Deinit(BOARD_LPIT_INSTANCE);
+
+~~~~~
+
+## Basic Control Operations {#LPITBasicOp}
+After LPIT initialization, the LPIT_DRV_StartTimerChannels() can be used to start single or multiple timer channel counting.
+In addition, to stop timer channels you can call LPIT_DRV_StopTimerChannels().@n
+To get interrupt flag of timer channels you can call LPIT_DRV_GetInterruptFlagTimerChannels().@n
+To clear interrupt flag of timer channels you can call LPIT_DRV_ClearInterruptFlagTimerChannels().@n
+To set period of timer channel again, you can call to LPIT_DRV_SetTimerPeriodByUs() or LPIT_DRV_SetTimerPeriodByCount().@n
+Note that you must pass correctly period value, otherwise the two set period functions will will return LPIT_STATUS_INVALID_PERIOD error code.
+*/

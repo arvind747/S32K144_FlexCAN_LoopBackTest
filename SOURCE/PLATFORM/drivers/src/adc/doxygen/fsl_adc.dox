@@ -1,0 +1,14 @@
+/*!
+@defgroup adc Analog to Digital Converter (ADC)
+@details 
+The S32 SDK provides both HAL and Peripheral Drivers for the Analog to Digital Converter (ADC) module of S32 SDK devices.
+
+The ADC is a configurable 12-bit (selectable to between 8-bit, 10-bit and 12-bit resolution) single-ended SAR converter.
+
+Features of the ADC include:
+    - 16 result channels, with configurable triggers
+    - a maximum of 16 external input sources and 4 internal input sources
+    - hardware compare and average functions
+    - auto-calibration feature
+
+ */

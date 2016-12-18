@@ -1,0 +1,24 @@
+/*!
+ * @defgroup trgmux_driver TRGMUX Driver
+ * @ingroup trgmux
+ * @brief Trigger MUX Control Peripheral Driver.
+ *
+ * ## Overview ##
+ * 
+ * This section describes the programing interface of the TRGMUX driver. The TRGMUX driver configures the TRGMUX (Trigger Mux Control). The Trigger MUX module allows software to configure the 
+ * trigger inputs for various peripherals.
+ * 
+ * ## TRGMUX Driver model building ##
+ * 
+ * TRGMUX can be seen as a collection of muxes, each mux allowing to select at it's output one entry from a list of input signals that are common to all muxes. The TRGMUX registers are identical 
+ * as structure and all the bitfields they contain can be read/written using the API in the HAL layer of the TRGMUX driver. 
+ *
+ * ## TRGMUX Initialization ##
+ *
+ *  Call the API of <b>TRGMUX_DRV_Init()</b> function to initialize the TRGMUX IP. The function receives as parameter a pointer to the trgmux_user_config_t structure. This structure contains a 
+ * variable number of mappings between one of the trgmux available trigger sources and one of the trgmux available target modules. 
+ *
+ * ## TRGMUX API ##
+ * After being initialized, the driver allows the reconfiguration of the source trigger for a given target module with the help of the function <b>TRGMUX_DRV_SetTrigSourceForTargetModule()</b>. 
+ * Also, a given target module can be locked, such that it cannot be updated until a reset by using the <b>TRGMUX_DRV_SetLockForTargetModule()</b> API.
+ */

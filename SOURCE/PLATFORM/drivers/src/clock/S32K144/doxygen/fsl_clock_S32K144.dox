@@ -1,0 +1,18 @@
+/** 
+@defgroup clock_manager_s32k144 Clock Manager Driver
+@brief This module covers the device-specific clock_manager functionality implemented for S32K144 SOC.
+<p>
+The support for S32K144 consist in the following items:
+-# Clock names enumeration
+\ref clock_names_t is an enumeration which contains all clock names which are relevant for S32K144.
+-# Submodule configuration structures
+    - \ref scg_config_t
+    - \ref pcc_config_t
+    - \ref sim_clock_config_t
+-# Submodule configuration functions
+The following functions were implemented for S32K144:
+    - \ref CLOCK_SYS_SetScgConfiguration
+    - \ref CLOCK_SYS_SetPccConfiguration
+    - \ref CLOCK_SYS_SetSimConfiguration
+</p>
+*/

@@ -1,0 +1,7 @@
+/*!
+ * @defgroup trgmux_hal TRGMUX HAL
+ * @ingroup trgmux
+ * @brief Trigger MUX Control Hardware Abstraction Layer.
+ * 
+ * This HAL provides low-level access to all hardware features of the TRGMUX.
+ */

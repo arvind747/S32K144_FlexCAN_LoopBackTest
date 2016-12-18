@@ -1,0 +1,14 @@
+/** 
+@defgroup fsl_sim_hal System Integration Module (SIM)
+@brief This module cover System Integration Module functionality
+
+@details The section describes the programming interface of the SIM HAL driver.
+The System Integration Module (SIM) provides the system control and device configuration registers. The sim_hal
+provides a set of API functions used to access the  SIM registers including clock gate control and other configuration
+settings.
+
+To configure or read a bit field call the appropriate method.
+The methods associated with the clock configuration are used by the Clock_Manager driver.
+Clock related properties can also be configured trough clock_manager configuration.
+
+*/

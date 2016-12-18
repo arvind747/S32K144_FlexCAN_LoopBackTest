@@ -1,0 +1,178 @@
+/*!
+  
+   @defgroup rtc Real Time Clock Driver (RTC)
+   ## Hardware background ##
+   The Real Time Clock Module is a independent timer that keeps track of the exact date and 
+   time with no software overhead, with low power usage. 
+   
+   Features of the RTC module include:   
+    - 32-bit seconds counter with roll-over protection and 32-bit alarm
+    - 16-bit prescaler with compensation that can correct errors between 0.12 ppm and 3906 ppm
+    - Option to increment prescaler using the LPO (prescaler increments by 32 every clock edge)
+    - Register write protection
+    - Lock register requires POR or software reset to enable write access
+    - Configurable 1, 2, 4, 8, 16, 32, 64 or 128 Hz square wave output with optional interrupt
+    - Alarm interrupt configured by the driver automatically refreshes alarm time configured by the user
+    - User interrupt handlers can be configured for all interrupts
+    
+    
+   ## How to use the RTC driver in your application ##
+   In order to be able to use the RTC in your application, the first thing to do is
+   initializing it with the desired configuration. This is done by calling the <b>RTC_DRV_Init</b>
+   function. One of the arguments passed to this function is the configuration which will be
+   used for the RTC instance, specified by the <b>rtc_init_config_t</b> structure.
+   
+   The <b>rtc_init_config_t</b> structure allows you to configure the following:
+        -   RTC clock source (32 KHz clock or 1 KHz LPO clock)
+        -   Additional oscillator load
+        -   Clock Out pin configuration (Which pin will be used for Clock Out and source select for clock out)
+        -   Compensation (Interval and value)
+        -   Update enable - this allows updates to Time Counter Enable bit if the Status Register under limited conditions
+        -   Enable non supervisor writes to the registers
+
+   The <b>rtc_seconds_int_config_t</b> structure configures the <b>time seconds interrupt</b>. To setup an interrupt every seconds you have to configure the structure mentioned with the following parameters:
+        -   Frequency of the interrupt
+        -   Interrupt Handler
+        -   If needed - interrupt handler parameters
+        
+   An alarm is configured with <b>rtc_alarm_config_t</b> structure, which is described by the following 
+   parameters:
+        -   Alarm time in date-time format
+        -   Interval of alarm repeat in seconds
+        -   Number of alarm repeats (use 0 if the alarm is not recursive)
+        -   Repeat forever field (if set, the number of repeats field will be ignored)
+        -   Alarm interrupt enable
+        -   Alarm interrupt handler
+        -   Alarm interrupt handler parameters
+        
+   <b>Note</b> If the alarm interrupt is not enabled, the user must make the updates of the alarm time
+   manually.
+   
+   After the RTC_DRV_Init call and, if needed, alarm and other configurations the RTC counter is started by calling RTC_DRV_Enable, with start time as parameter in 
+   <b>rtc_timedate_t</b> format.
+   
+   To get the current time and date you can call RTC_DRV_GetCurrentTimeDate function, this method will get the seconds from the Time Seconds Register and 
+   will convert into human readable format as rtc_timedate_t.
+
+   #### Example: ####
+@code  
+void rtcAlarmCallback()
+{
+    rtc_timedate_t currentTime;
+    RTC_DRV_GetCurrentTimeDate(0U, &currentTime);
+    
+    /* Do something with the time and date */
+}
+
+int main()
+{
+/*! RTC configuration structure */
+    rtc_init_config_t                        rtcInitConfig = 
+    {
+        /*! RTC Clock Source is 1KHz LPO */
+        .clockSelect                =   RTC_CLK_SRC_LPO_1KHZ,
+
+        /*! RTC Clock Out is Disabled */
+        .clkOutEnable               =   false,
+        
+        /*! RTC Clock Out pin is disabled */
+        .clockPinCfg                =   RTC_CLK_PIN_DISABLED,
+
+        /*! RTC Clock Out source is Time Seconds Interrupt */
+        .clockPinSelect             =   RTC_CLKOUT_SELECT_TSIC,    
+
+        /*! Update of the TCE bit is not allowed */
+        .updateEnable               =   false,
+        
+        /*! Non-supervisor mode write accesses are not supported and generate 
+         * a bus error.
+         */
+        .nonSupervisorAccessEnable  =   false,
+        
+        /*! Time compensation value */
+        .compensation               =   0,
+        
+        /*! Time compensation interval */
+        .compensationInterval       =   0U
+    };
+
+    /*! RTC Initial Time and Date */
+    rtc_timedate_t       rtcStartTime =
+    {
+        /*! Year */
+        .year       =   2016U,
+        /*! Month */
+        .month      =   01U,
+        /*! Day */
+        .day        =   01U,
+        /*! Hour */
+        .hour       =   00U,
+        /*! Minutes */
+        .minutes    =   00U,
+        /*! Seconds */
+        .seconds    =   00U
+    };
+
+    /*! rtcTimer1 Alarm configuration 0 */
+    rtc_alarm_config_t   alarmConfig0 = 
+    {
+        /*! Alarm Date */
+        .alarmTime           =  
+            {
+                /*! Year    */
+                .year       =  2016U,
+                /*! Month   */
+                .month      =  01U,
+                /*! Day     */
+                .day        =  01U,
+                /*! Hour    */
+                .hour       =  00U,
+                /*! Minutes */
+                .minutes    =  00U,
+                /*! Seconds */
+                .seconds    =  03U,
+            },
+            
+        /*! Repeat alarm forever */
+        .repeatForever       =       true,   
+        
+        /*! Number of alarm repeats */
+        .numberOfRepeats     =       0UL,
+        
+        /*! Alarm repeat interval */
+        .repetitionInterval  =       3UL,
+
+        
+        /*! Alarm interrupt disabled */
+        .alarmIntEnable      =      true,
+        
+        /*! Alarm interrupt handler */
+        .alarmCallback       =     (void *)rtcAlarmCallback,
+        
+        /*! Alarm interrupt handler parameters */
+        .callbackParams      =     (void *)NULL
+    };
+
+        /* Call the init function */
+        RTC_DRV_Init(0U, &rtcInitConfig);
+
+        /* Start RTC counter */
+        RTC_DRV_Enable(0U, &rtc_init_config_t);
+
+        /* Configure an alarm every 3 seconds */
+        RTC_DRV_ConfigureAlarm(0U, &rtcAlarmConfig0);
+
+        while(1);
+}
+@endcode
+
+    ### Important Notes ###
+<p>
+  - Before using the RTC driver the module clock must be configured
+  - The driver enables the interrupts for the corresponding RTC module, but any interrupt priority 
+    must be done by the application
+  - The board specific configurations must be done prior to driver calls; the driver has no influence on the
+    functionality of the clockout pin - they must be configured by application
+</p>
+
+@}*/

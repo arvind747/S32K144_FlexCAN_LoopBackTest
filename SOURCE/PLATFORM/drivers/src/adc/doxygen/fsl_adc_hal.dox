@@ -1,0 +1,7 @@
+/*!
+ * @defgroup adc_hal ADC HAL
+ * @ingroup adc
+ * @brief Analog to Digital Converter Hardware Abstraction Layer.
+ * 
+ * This HAL provides low-level access to all hardware features of the ADC.
+ */

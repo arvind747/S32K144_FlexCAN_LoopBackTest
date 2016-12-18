@@ -1,0 +1,8 @@
+/**
+@defgroup lptmr_hal LPTMR HAL
+@ingroup lptmr
+@brief Low Power Timer Hardware Abstraction Layer
+
+This HAL provides low-level access to all hardware features of the LPTMR.
+
+*/

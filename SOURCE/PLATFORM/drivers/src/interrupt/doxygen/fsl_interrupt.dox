@@ -1,0 +1,29 @@
+/*!
+@defgroup interrupt_manager  Interrupt Manager (Interrupt)
+@brief The S32 SDK Interrupt Manager provides a set of API/services to configure the Interrupt Controller (NVIC).
+@details 
+The Nested-Vectored Interrupt Controller (NVIC) module implements a relocatable vector table supporting many external interrupts, a single
+non-maskable interrupt (NMI), and priority levels. The NVIC contains the address of the function to execute for a
+particular handler. The address is fetched via the instruction port allowing parallel
+register stacking and look-up. The first sixteen entries are allocated to internal sources with the others mapping to MCU-defined interrupts.
+
+# Overview
+
+The Interrupt Manager provides a set of APIs so that the application can enable or disable an interrupt
+for a specific device and also set priority, and other features. Additionally, it provides 
+a way to update the vector table for a specific device interrupt handler.
+
+# Interrupt Names
+
+Each chip has its own set of supported interrupt names defined in the chip-specific header file (see \ref IRQn_Type).
+
+This is an example to enable/disable an interrupt for the ADC0_IRQn:
+~~~~~{.c}
+    #include "fsl_interrupt_manager.h"
+
+    INT_SYS_EnableIRQ(ADC0_IRQn);
+
+    INT_SYS_DisableIRQ(ADC0_IRQn);
+
+~~~~~
+*/

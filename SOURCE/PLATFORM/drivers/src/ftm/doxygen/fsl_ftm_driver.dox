@@ -1,0 +1,305 @@
+/*!
+   @defgroup ftm FlexTimer (FTM)
+   @details
+   @brief FlexTimer Peripheral Driver.
+   
+   ## Hardware background ##
+   The FTM of the S32K144 is based on a 16 bits counter and supports: input capture, output compare, PWM and some instances
+   include quadrature decoder.
+   The main features are: 
+  
+   •FTM source clock is selectable (Source clock can be the system clock, the fixed frequency clock, or an external
+clock)
+  
+   •Prescaler: 1, 2, 4, 8, 16, 32, 64, 128
+  
+   •16 bit counter (up and up-down counting) 
+  
+   •Each channel can be configured for input capture, output compare, or edge-aligned
+   PWM mode.
+  
+   •Input Capture mode (single edge,  dual edge)
+  
+   •Output Compare mode (set, cleared or toggle on match)
+  
+   •All channels can be configured for center-aligned PWM mode.
+  
+   •Each pair of channels can be combined to generate a PWM signal with independent
+control of both edges of PWM signal and with deadtime insertion.
+  
+   •Up to 4 fault inputs for global fault control
+  
+   •Dual edge capture for pulse and period width measurement
+  
+   •Quadrature decoder with input filters, relative position counting, and interrupt on
+position count or capture of position count on external event.
+
+   ## How to use FTM driver in you application ##
+   For all operation modes (without Quadrature Decoder mode) the user need to configure ftm_user_config_t. This structure will be used for initialization
+   (FTM_DRV_Init). The next functions used are specific
+   for each operation mode.
+   
+   ### Output compare mode ###
+   For this mode the user needs to configure max counter value, number of channels used and output mode for each channel (toggle/clear/set on match).
+   This information is stored in ftm_output_cmp_param_t data type and are used in FTM_DRV_SetupChnOutputCompare. Next step is to set a value for
+   comparison with FTM_DRV_SetNextComparematchValue.
+  
+   # Example: #
+   @code  
+    /*channels configuration structure for PWM output compare*/
+    ftm_output_cmp_ch_param_t PWM_OutputCompareChannelConfig[2] =
+    {
+        {
+            0,                      /*Channel id*/
+            FTM_TOGGLE_ON_MATCH,    /*Output mode*/
+            10000U,                 /*Compared value */
+        },
+        {
+            1,                      /*Channel id*/
+            FTM_TOGGLE_ON_MATCH,    /*Output mode*/
+            20000U,                 /*Compared value */
+        }
+    };
+    
+    /*Output compare configuration for PWM */
+    ftm_output_cmp_param_t PWM_OutputCompareConfig =
+    {
+        2,                              /*Number of channels*/
+        FTM_MODE_OUTPUT_COMPARE,        /*FTM mode*/
+        40000U,                         /*Max count value*/
+        &PWM_OutputCompareChannelConfig /*Channels configuration*/
+    };
+    /* timer mode configuration for PWM*/
+    /*global configuration of PWM*/
+    ftm_user_config_t  PWM_InitConfig =
+    {   
+        {
+            true,                       /* Software trigger state */
+            false,                      /* Hardware trigger 1 state */
+            false,                      /* Hardware trigger 2 state */
+            false,                      /* Hardware trigger 3 state */
+            true,                       /* Max loading point state */
+            true,                       /* Min loading point state */
+            FTM_SYSTEM_CLOCK,           /* Update mode for INVCTRL register */
+            FTM_SYSTEM_CLOCK,           /* Update mode for SWOCTRL register */
+            FTM_SYSTEM_CLOCK,           /* Update mode for OUTMASK register */
+            FTM_SYSTEM_CLOCK,           /* Update mode for CNTIN register */
+        },
+        FTM_CLOCK_DIVID_BY_4,           /* FTM clock prescaler */
+        FTM_CLOCK_SOURCE_SYSTEMCLK,     /* FTM clock source */
+        FTM_BDM_MODE_11,                /*FTM debug mode */
+        0U,                             /*Overflow ratio*/
+        false,                          /*Write protection*/
+        false                           /*Interrupt state*/
+    }; 
+    FTM_DRV_Init(FTM_PWM_INSTANCE, &PWM_InitConfig);
+    FTM_DRV_InitOutputCompare(FTM_PWM_INSTANCE, &PWM_OutputCompareConfig);
+    /*if you want to change compared value */
+    FTM_DRV_UpdateOutputCompareChannel(OUTPUT_COMPARE_INSTANCE, CHANNEL, COMPARED_VALUE );
+  
+    @endcode  
+   ### PWM mode ###
+   For this mode the user needs to configure parameters such: number of PWM channels, frequency, dead time, fault channels and 
+   duty cycle, alignment (edge or center). All this information is included in ftm_pwm_param_t data type.
+    
+   FTM_DRV_UpdateDutyCycle can be used to update duty cycles at run time. The duty cycle can have value  between 0x0 (0%) and 0x8000 (100%).
+  
+   # Example:#
+    @code
+    /*fault configuration structure for FTM1*/
+    ftm_pwm_fault_param_t PWM_FaultConfig =
+    {
+        false,
+        true,
+        5U, /*faultFilterValue*/ 
+        FTM_FAULT_CONTROL_MAN_EVEN, 
+        {
+            {
+                true,               /*fault channel state (Enabled/Disabled)*/
+                false,              /*fault channel filter state (Enabled/Disabled)*/
+                FTM_POLARITY_HIGH,  /*fault channel state (Enabled/Disabled)*/
+            },
+            {
+                false,              /*fault Channel state (Enabled/Disabled)*/
+                false,              /*fault channel filter state (Enabled/Disabled)*/
+                FTM_POLARITY_LOW    /*ftmFaultPinPolarity*/
+            },
+            {
+                false,              /*fault Channel state (Enabled/Disabled)*/
+                false,              /*fault channel filter state (Enabled/Disabled)*/
+                FTM_POLARITY_LOW    /*ftmFaultPinPolarity*/
+            },
+            {
+                false,              /*fault Channel state (Enabled/Disabled)*/
+                false,              /*fault channel filter state (Enabled/Disabled)*/
+                FTM_POLARITY_LOW    /*ftmFaultPinPolarity*/
+            }
+        } 
+    };
+    /*independent channels configuration structure for PWM*/
+    ftm_independent_ch_param_t PWM_IndependentChannelsConfig[1] =   
+    {
+        {
+            0U,                 /*hwChannelId*/
+            FTM_POLARITY_HIGH,  /*edgeMode*/
+            10922,              /*uDutyCyclePercent 0-0x8000*/
+        }
+    };
+    /*combine channels configuration structure for PWM*/
+    ftm_combined_ch_param_t PWM_CombinedChannelsConfig[0] =
+    {
+    };
+    /*PWM configuration for PWM */
+    ftm_pwm_param_t PWM_PwmConfig =
+    {
+        1,                              /*Number of independent PWM channels*/
+        0,                              /*Number of combined PWM channels*/
+        FTM_MODE_EDGE_ALIGNED_PWM,      /*PWM mode*/
+        0,                              /*deadTimeValue*/
+        FTM_DEADTIME_DIVID_BY_4,        /*Deadtime clock divider*/
+        7481,                           /*PWM frequency*/
+        &PWM_IndependentChannelsConfig, /*Independent PWM channels config structure*/
+        &PWM_CombinedChannelsConfig,    /*Combined PWM channels config structure*/
+        &PWM_FaultConfig                /*PWM fault config structure*/
+    };
+    /* timer mode configuration for PWM*/
+    /*global configuration of PWM*/
+    ftm_user_config_t  PWM_InitConfig =
+    {
+        {
+            true,               /* Software trigger state */
+            false,              /* Hardware trigger 1 state */
+            false,              /* Hardware trigger 2 state */
+            false,              /* Hardware trigger 3 state */
+            true,               /* Max loading point state */
+            true,               /* Min loading point state */
+            FTM_SYSTEM_CLOCK,   /* Update mode for INVCTRL register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for SWOCTRL register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for OUTMASK register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for CNTIN register */
+        },
+        FTM_CLOCK_DIVID_BY_4,           /* FTM clock prescaler */
+        FTM_CLOCK_SOURCE_SYSTEMCLK,     /* FTM clock source */
+        FTM_BDM_MODE_11,                /*FTM debug mode */
+        0U,                             /*Overflow ratio*/
+        false,                          /*Write protection*/
+        false                           /*Interrupt state*/
+    };
+    FTM_DRV_Init(FTM_PWM_INSTANCE, &PWM_InitConfig);
+    FTM_DRV_InitPwm(FTM_PWM_INSTANCE, &PWM_PwmConfig);
+    /* It's recommended to use softwareTrigger = true */
+    /* SECOND_EDGE value is used only when PWM is used in combined mode */
+    FTM_DRV_UpdatePwmChannel(FTM_PWM_INSTANCE, CHANNEL, FIRST_EDGE, SECOND_EDGE, softwareTrigger); 
+    @endcode
+    
+   ### Single edge input capture (get time stamp for specific edge) mode ###
+   For this mode the user needs to configure parameters such: max counter value, number of channels, input capture operation mode
+   (for single edge input are used edge detect mode) and edge alignment. All this information is included in ftm_input_param_t.
+  
+   # Example: #
+    @code
+    /*channels configuration structure for inputCapture input capture*/
+    ftm_input_ch_param_t inputCapture_InputCaptureChannelConfig[1] =
+    {
+        {
+        0U,                 /* Channel id*/ 
+        FTM_EDGE_DETECT,    /* Input capture operation Mode*/
+        FTM_RISING_EDGE,    /* Edge alignment Mode*/
+        FTM_NO_MEASUREMENT, /* Signal measurement operation type*/
+        0U,                 /* Filter value */
+        false,              /* Filter disabled */
+        true                /* Continous mode measurement */ 
+        }
+    };  
+    /*Input capture configuration for inputCapture */
+    ftm_input_param_t inputCapture_InputCaptureConfig =
+    {
+        1U,                                     /* Number of channels*/
+        65535U,                                 /* Max count value*/
+        &inputCapture_InputCaptureChannelConfig /* Channels configuration*/
+    };
+    /* timer mode configuration for inputCapture*/
+    /*global configuration of inputCapture*/
+    ftm_user_config_t  inputCapture_InitConfig =
+    {
+        {
+            false,              /* Software trigger state */
+            false,              /* Hardware trigger 1 state */
+            false,              /* Hardware trigger 2 state */
+            false,              /* Hardware trigger 3 state */
+            false,              /* Max loading point state */
+            false,              /* Min loading point state */
+            FTM_SYSTEM_CLOCK,   /* Update mode for INVCTRL register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for SWOCTRL register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for OUTMASK register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for CNTIN register */
+        },
+        FTM_CLOCK_DIVID_BY_4,           /* FTM clock prescaler */
+        FTM_CLOCK_SOURCE_SYSTEMCLK,     /* FTM clock source */
+        FTM_BDM_MODE_00,                /* FTM debug mode */
+        0U,                             /* Overflow ratio */
+        false,                          /* Write protection */
+        false                           /* Interrupt state */
+    };
+    FTM_DRV_Init(FTM_IC_INSTANCE, &inputCapture_InitConfig);
+    FTM_DRV_InitInputCapture(FTM_IC_INSTANCE, &inputCapture_InputCaptureConfig);
+    counter = FTM_DRV_GetInputCaptureMeasurement(FTM_IC_INSTANCE, channel, )U);
+    @endcode
+   FTM_DRV_GetInputCaptureMeasurement is now used in polling mode, but in interrupt mode this is the handler used to save time stamps
+   in internal buffers.
+  
+   ### Quadrature decoder mode ###
+   For this mode the user needs to configure parameters like: max counter value, initial counter value, mode (Count and Direction Encoding mode,
+   Count and Direction Encoding mode), and for both input phases polarity and filtering. All this information is included in ftm_quad_decode_config_t.
+   In this mode the counter is clocked by the phase A and phase B, so FTM_DRV_SetClock will not be used. The current state of the decoder can be obtained
+   using FTM_DRV_QuadGetState.
+  
+   #### Hardware limitation: ####
+   In count and direction mode if initial value of the PHASE_A is HIGH the counter will be incremented.
+   # Example: #
+    @code
+    ftm_quad_decode_config_t quadrature_decoder_configuration =
+    {
+        FTM_QUAD_COUNT_AND_DIR, /* Qadrature decoder mode */
+        0U,                     /* Initial counter value */
+        32500U,                 /* Max counter value */
+        {
+            false,                  /* Filter state */
+            0U,                     /* Filter value */
+            FTM_QUAD_PHASE_NORMAL   /* Phase polarity */
+        },
+        {
+            false,                  /* Filter state */
+            0U,                     /* Filter value */
+            FTM_QUAD_PHASE_NORMAL   /* Phaes polarity */
+        }
+    };
+    /* timer mode configuration for Quadrature*/
+    /*global configuration of Quadrature*/
+    ftm_user_config_t  Quadrature_InitConfig =
+    {
+        {
+            false,              /* Software trigger state */
+            false,              /* Hardware trigger 1 state */
+            false,              /* Hardware trigger 2 state */
+            false,              /* Hardware trigger 3 state */
+            false,              /* Max loading point state */
+            false,              /* Min loading point state */
+            FTM_SYSTEM_CLOCK,   /* Update mode for INVCTRL register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for SWOCTRL register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for OUTMASK register */
+            FTM_SYSTEM_CLOCK,   /* Update mode for CNTIN register */
+        },
+        FTM_CLOCK_DIVID_BY_1,           /* FTM clock prescaler */
+        FTM_CLOCK_SOURCE_SYSTEMCLK,     /* FTM clock source */
+        FTM_BDM_MODE_00,                /*FTM debug mode */
+        0U,                             /*Overflow ratio*/
+        false,                          /*Write protection*/
+        false                           /*Interrupt state*/
+    };
+    FTM_DRV_Init(FTM_QUADRATURE_INSTANCE, &Quadrature_InitConfig);
+    FTM_DRV_QuadDecodeStart(FTM_QUADRATURE_INSTANCE, quadrature_decoder_configuration);
+    quadra_state = FTM_DRV_QuadGetState(FTM_QUADRATURE_INSTANCE);
+    FTM_DRV_QuadDecodeStart(FTM_QUADRATURE_INSTANCE);
+    @endcode
+@}*/

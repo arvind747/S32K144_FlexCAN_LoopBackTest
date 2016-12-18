@@ -1,0 +1,88 @@
+/**
+@defgroup lpuart Low Power Universal Asynchronous Receiver-Transmitter (LPUART)
+@brief The S32 SDK provides both HAL and Peripheral Driver for the Low Power Universal Asynchronous 
+Receiver-Transmitter (LPUART) module of S32 SDK devices.
+@n
+The LPUART module is used for serial communication, supporting LIN master and slave operation. These sections 
+describe the S32 SDK software modules API that can be used for initializing and configuring the module, as well
+as initiating serial communications using the interrupt-based method.
+
+*/
+
+/** 
+@defgroup lpuart_hal LPUART HAL
+@ingroup lpuart
+@brief This module covers the functionality of the Low Power Universal Asynchronous Receiver-Transmitter (LPUART) 
+hardware abstraction layer.
+<p>
+  LPUART HAL provides the API for reading and writing register bit-fields belonging to the LPUART module. It also 
+  provides an initialization function for bringing the module to the reset state.
+</p>
+<p>
+  The LPUART HAL functions are used by LPUART and LIN drivers. Besides register access, the LPUART HAL also provide 
+  a function to set the communication baud-rate (needed by both drivers using LPUART module).
+  Also, it provides basic serial communication functionality - send/receive functions based on polling method 
+  (writing/reading data to/from the buffer register when tx/rx flags are cleared).
+</p>
+<p>
+  For higher-level functionality, use the LPUART/LIN driver.
+</p>
+*/
+
+/**
+@defgroup lpuart_driver LPUART Driver
+@ingroup lpuart
+@brief This module covers the functionality of the Low Power Universal Asynchronous Receiver-Transmitter (LPUART) 
+peripheral driver.
+<p>
+  The LPUART driver implements serial communication using the LPUART module in the S32144K processor.
+</p>
+  ## Features ##
+   - Interrupt based
+   - Provides blocking and non-blocking transmit and receive functions
+   - Configurable baud rate
+   - 8/9/10 bits per char
+
+  ## Functionality ##
+<p>
+  In order to use the LPUART driver it must be first initialized, using LPUART_DRV_Init() function.
+  Once initialized, it cannot be initialized again for the same LPUART module instance until it is 
+  de-initialized, using LPUART_DRV_Deinit(). The initialization function does the following operations:
+    - sets the baud rate
+    - sets parity/bit count/stop bits count
+    - initializes the state structure for the current instance
+    - enables receiver/transmitter for the current instance
+  Different LPUART module instances can function independently of each other.
+</p>
+
+  ### Driver State Machine ###
+<p>
+  After initialization, a serial communication can be triggered by calling LPUART_DRV_SendData function; this
+  will save the reference of the data buffer received as parameter in the internal tx buffer pointer, then copy 
+  the first byte to the data register. The hw tranceiver then automatically shifts the data and triggers a
+  'Transmit buffer empty' interrupt when all bits are shifted. The drivers interrupt handler takes care of
+  transmitting the next byte in the buffer, by increasing the data pointer and decreasing the data size. The same
+  sequence of operations is executed until all bytes in the tx buffer have been transmitted.
+</p>
+<p>
+  Similarly, data reception is triggered by calling LPUART_DRV_ReceiveData function, passing the rx buffer as
+  parameter. When the tranceiver copies the received bits in the data register, the 'Receive buffer full' interrupt
+  is triggered; the driver irq handler clears the flag by reading the received byte, saves it in the rx buffer, 
+  then increments the data pointer and decrements the data size. This is repeated untill all bytes are received.
+</p>
+<p>
+  The workflow applies to send/receive operations using blocking method (triggered by LPUART_DRV_SendDataBlocking
+  and LPUART_DRV_ReceiveDataBlocking), with the single difference that the send/receive function will not return 
+  until the send/receive operation is complete (all bytes are successfully transferred or a timeout occured). The
+  timeout for the blocking method is passed as parameter by the user.
+</p>
+
+  ## Important Notes ##
+<p>
+  - Before using the LPUART driver the module clock must be configured
+  - The driver enables the interrupts for the corresponding LPUART module, but any interrupt priority 
+    must be done by the application
+  - The board specific configurations must be done prior to driver calls; the driver has no influence on the
+    functionality of the rx/tx pins - they must be configured by application
+</p>
+*/

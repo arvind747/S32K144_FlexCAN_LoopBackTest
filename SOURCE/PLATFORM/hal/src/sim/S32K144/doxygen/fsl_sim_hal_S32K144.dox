@@ -1,0 +1,12 @@
+/** 
+@defgroup fsl_sim_hal_s32k144
+@brief This module cover SIM module functionality implemented for S32K144
+<p>
+# Important Notes
+  The SIM_HAL API provides methods for setting and getting bit fields defined in the SIM module.
+  The are a few exception to this:
+  -# SetLpoClks - the register is write once, as such it makes sense to configure all bit fields in a single write
+  -# Read only bit fields cannot be configured, as such there is not Set method for them
+  -# InitTraceClock - Trace clock configuration bit fields requires specific order
+</p>
+*/
